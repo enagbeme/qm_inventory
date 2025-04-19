@@ -1,0 +1,61 @@
+@startuml QM Inventory System - Data Flow Diagram
+
+skinparam linetype ortho
+
+frame "External Entities" {
+  actor "Users" as users
+  actor "Suppliers" as suppliers
+  actor "Customers" as customers
+}
+
+frame "Processes" {
+  rectangle "User Authentication" as auth
+  rectangle "Product Management" as prod_mgmt
+  rectangle "Order Processing" as order_proc
+  rectangle "Inventory Control" as inv_ctrl
+  rectangle "Analytics Engine" as analytics
+  rectangle "Reporting System" as reporting
+  rectangle "Audit Logger" as audit
+}
+
+database "Data Stores" {
+  database "User Data" as user_db
+  database "Product Data" as prod_db
+  database "Order Data" as order_db
+  database "Inventory Logs" as inv_log
+  database "Audit Logs" as audit_db
+  database "Report Templates" as report_templates
+}
+
+' Data flows
+users --> auth: Login credentials
+auth --> user_db: Verify/Store
+auth --> audit: Log authentication events
+
+users --> prod_mgmt: Product updates
+prod_mgmt --> prod_db: Store product info
+prod_mgmt --> audit: Log product changes
+
+suppliers --> order_proc: Supply orders
+order_proc --> order_db: Store order data
+order_proc --> audit: Log order events
+
+customers --> order_proc: Place orders
+order_proc --> customers: Order confirmation
+
+prod_db --> inv_ctrl: Stock levels
+inv_ctrl --> inv_log: Record changes
+inv_ctrl --> audit: Log inventory updates
+
+prod_db --> analytics: Product data
+order_db --> analytics: Order history
+inv_log --> analytics: Stock movements
+
+analytics --> reporting: Analysis data
+reporting --> report_templates: Store templates
+reporting --> users: Generated reports
+
+audit --> audit_db: Store audit trails
+audit_db --> reporting: Audit reports
+
+@enduml

@@ -1,0 +1,135 @@
+@startuml QM Inventory System - ER Diagram
+
+skinparam linetype ortho
+
+entity "User" as user {
+  *user_id: Long <<PK>>
+  --
+  username: String
+  password: String
+  email: String
+  role: String
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "Product" as product {
+  *product_id: Long <<PK>>
+  --
+  name: String
+  description: String
+  sku: String
+  price: BigDecimal
+  quantity: Integer
+  category_id: Long <<FK>>
+  image_url: String
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "Category" as category {
+  *category_id: Long <<PK>>
+  --
+  name: String
+  description: String
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "Supplier" as supplier {
+  *supplier_id: Long <<PK>>
+  --
+  name: String
+  contact_person: String
+  email: String
+  phone: String
+  address: String
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "PurchaseOrder" as purchase_order {
+  *purchase_order_id: Long <<PK>>
+  --
+  supplier_id: Long <<FK>>
+  order_date: LocalDateTime
+  status: String
+  total_amount: BigDecimal
+  created_by: Long <<FK>>
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "PurchaseOrderItem" as purchase_order_item {
+  *purchase_order_item_id: Long <<PK>>
+  --
+  purchase_order_id: Long <<FK>>
+  product_id: Long <<FK>>
+  quantity: Integer
+  unit_price: BigDecimal
+  total_price: BigDecimal
+}
+
+entity "InventoryLog" as inventory_log {
+  *inventory_log_id: Long <<PK>>
+  --
+  product_id: Long <<FK>>
+  quantity_change: Integer
+  change_type: String
+  reference_type: String
+  reference_id: Long
+  notes: String
+  created_by: Long <<FK>>
+  created_at: LocalDateTime
+}
+
+entity "Customer" as customer {
+  *customer_id: Long <<PK>>
+  --
+  name: String
+  email: String
+  phone: String
+  address: String
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "Order" as order {
+  *order_id: Long <<PK>>
+  --
+  customer_id: Long <<FK>>
+  order_date: LocalDateTime
+  status: String
+  total_amount: BigDecimal
+  created_by: Long <<FK>>
+  created_at: LocalDateTime
+  updated_at: LocalDateTime
+}
+
+entity "OrderItem" as order_item {
+  *order_item_id: Long <<PK>>
+  --
+  order_id: Long <<FK>>
+  product_id: Long <<FK>>
+  quantity: Integer
+  unit_price: BigDecimal
+  total_price: BigDecimal
+}
+
+user ||--o{ purchase_order : creates
+user ||--o{ inventory_log : creates
+user ||--o{ order : creates
+
+product }|--|| category : belongs to
+product ||--o{ purchase_order_item : contains
+product ||--o{ order_item : contains
+product ||--o{ inventory_log : tracks
+
+supplier ||--o{ purchase_order : supplies
+
+purchase_order ||--|{ purchase_order_item : contains
+
+customer ||--o{ order : places
+order ||--|{ order_item : contains
+
+@enduml

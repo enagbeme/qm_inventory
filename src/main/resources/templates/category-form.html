@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${categoryDTO.categoryId != null} ? 'Edit Category' : 'Add New Category'">Category Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+    <link rel="stylesheet" th:href="@{/css/category.css}"/>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+        }
+        .dashboard-layout {
+            display: flex;
+        }
+
+        .main-content {
+            padding: 20px;
+            flex-grow: 1;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .main-header h1 {
+            margin-bottom: 20px;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn-save, .btn-cancel {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-save {
+            background-color: #3498db;
+            color: white;
+            border: none;
+        }
+        .btn-save:hover {
+            background-color: #2980b9;
+        }
+        .btn-cancel {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+        }
+        .btn-cancel:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-boxes"></i> QM Inventory</h2>
+        </div>
+        <nav>
+            <ul>
+                <li><a th:href="@{/}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/inventoryLogs}"><i class="fas fa-box"></i> Inventory</a></li>
+                <li class="active"><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
+                <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
+                <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
+                <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
+                <li><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            </ul>
+        </nav>
+        <div class="user-profile">
+            <div class="user-info">
+                <img th:src="@{/images/user.png}" alt="User Avatar">
+                <div>
+                    <span class="username" th:text="${user != null} ? ${user.firstName + ' ' + user.lastName} : 'Guest'"></span>
+                    <span class="role" th:text="${user != null && user.roles != null && !user.roles.isEmpty()} ? ${user.roles[0].name} : 'N/A'"></span>
+                </div>
+            </div>
+            <a th:href="@{/logout}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <h1 th:text="${categoryDTO.categoryId != null} ? 'Edit Category' : 'Add New Category'">Category Form</h1>
+        </header>
+
+        <div class="form-container">
+            <form th:action="${categoryDTO.categoryId != null} ? @{/categories/{id}(id=${categoryDTO.categoryId})} : @{/categories}" th:object="${categoryDTO}" method="post">
+                <input type="hidden" th:if="${categoryDTO.categoryId != null}" th:field="*{categoryId}">
+                
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" th:field="*{name}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" th:field="*{description}"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="parentCategory">Parent Category</label>
+                    <select id="parentCategory" th:field="*{parentCategory}">
+                        <option value="">-- Select Parent Category --</option>
+                        <option th:each="category : ${T(com.enagbem.qm_inventory.model.ParentCategory).values()}" 
+                                th:value="${category.name()}" 
+                                th:text="${category.name()}"
+                                th:selected="${category.name() == categoryDTO.parentCategory?.name()}"> <!-- Use name() for comparison -->
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <a th:href="@{/categories}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">Save</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

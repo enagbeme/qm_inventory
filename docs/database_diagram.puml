@@ -1,0 +1,130 @@
+@startuml QM Inventory System - Database Schema
+
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <i>x</i>
+
+table(users) {
+  primary_key(user_id): BIGINT
+  username: VARCHAR(50)
+  password: VARCHAR(255)
+  email: VARCHAR(100)
+  role: VARCHAR(20)
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(categories) {
+  primary_key(category_id): BIGINT
+  name: VARCHAR(100)
+  description: TEXT
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(products) {
+  primary_key(product_id): BIGINT
+  name: VARCHAR(255)
+  description: TEXT
+  sku: VARCHAR(50)
+  price: DECIMAL(10,2)
+  quantity: INT
+  foreign_key(category_id): BIGINT
+  image_url: VARCHAR(255)
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(suppliers) {
+  primary_key(supplier_id): BIGINT
+  name: VARCHAR(255)
+  contact_person: VARCHAR(100)
+  email: VARCHAR(100)
+  phone: VARCHAR(20)
+  address: TEXT
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(purchase_orders) {
+  primary_key(purchase_order_id): BIGINT
+  foreign_key(supplier_id): BIGINT
+  order_date: TIMESTAMP
+  status: VARCHAR(20)
+  total_amount: DECIMAL(10,2)
+  foreign_key(created_by): BIGINT
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(purchase_order_items) {
+  primary_key(purchase_order_item_id): BIGINT
+  foreign_key(purchase_order_id): BIGINT
+  foreign_key(product_id): BIGINT
+  quantity: INT
+  unit_price: DECIMAL(10,2)
+  total_price: DECIMAL(10,2)
+}
+
+table(inventory_logs) {
+  primary_key(inventory_log_id): BIGINT
+  foreign_key(product_id): BIGINT
+  quantity_change: INT
+  change_type: VARCHAR(20)
+  reference_type: VARCHAR(50)
+  reference_id: BIGINT
+  notes: TEXT
+  foreign_key(created_by): BIGINT
+  created_at: TIMESTAMP
+}
+
+table(orders) {
+  primary_key(order_id): BIGINT
+  customer_name: VARCHAR(255)
+  customer_email: VARCHAR(100)
+  customer_phone: VARCHAR(20)
+  shipping_address: TEXT
+  status: VARCHAR(20)
+  total_amount: DECIMAL(10,2)
+  foreign_key(created_by): BIGINT
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+table(order_items) {
+  primary_key(order_item_id): BIGINT
+  foreign_key(order_id): BIGINT
+  foreign_key(product_id): BIGINT
+  quantity: INT
+  unit_price: DECIMAL(10,2)
+  total_price: DECIMAL(10,2)
+}
+
+products }|--|| categories
+purchase_orders }|--|| suppliers
+purchase_orders }|--|| users
+purchase_order_items }|--|| purchase_orders
+purchase_order_items }|--|| products
+inventory_logs }|--|| products
+inventory_logs }|--|| users
+orders }|--|| users
+order_items }|--|| orders
+order_items }|--|| products
+
+note bottom of users
+  Roles: ADMIN, STAFF
+end note
+
+note bottom of purchase_orders
+  Status: PENDING, APPROVED, RECEIVED
+end note
+
+note bottom of orders
+  Status: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+end note
+
+note bottom of inventory_logs
+  Change Types: PURCHASE, SALE, ADJUSTMENT, RETURN, DAMAGE
+end note
+
+@enduml

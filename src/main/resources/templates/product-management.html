@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | QM Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+    <link rel="stylesheet" th:href="@{/css/product.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <style>
+        .table-responsive {
+            margin-top: 20px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 15px;
+            padding: 15px 0;
+        }
+        .product-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+        }
+        .product-image {
+            height: 160px;
+            width: 100%;
+            object-fit: contain;
+            border-radius: 6px 6px 0 0;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-info {
+            padding: 12px;
+            flex-grow: 1;
+        }
+        .product-actions {
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            margin-top: auto;
+        }
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: flex-end;
+            position: relative;
+        }
+        .search-container input {
+            padding: 8px 12px 8px 35px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            font-size: 14px;
+        }
+        .search-container input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .search-container i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-boxes"></i> QM Inventory</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a th:href="@{/}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/inventoryLogs}"><i class="fas fa-box"></i> Inventory</a></li>
+                <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
+                <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
+                <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
+                <li class="active"><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
+                <li><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            </ul>
+        </nav>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <img th:src="@{/images/user.png}" alt="User Avatar">
+                <div>
+                    <span class="username" th:text="${user.firstName + ' ' + user.lastName}"></span>
+                    <span class="role" th:text="${user.roles[0].name}"></span>
+                </div>
+            </div>
+            <a th:href="@{/logout}" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <h1>Product Management</h1>
+            <div class="header-actions">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="productSearch" placeholder="Search products...">
+                </div>
+                <a th:href="@{/products/new}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Product
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <span th:text="${message}"></span>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}"></span>
+        </div>
+
+        <div class="product-grid">
+            <div th:each="product : ${products}" class="product-card">
+                <img th:if="${product.imagePath}" 
+                     th:src="@{'/uploads/' + ${product.imagePath}}" 
+                     class="product-image"
+                     alt="Product Image">
+                <div th:unless="${product.imagePath}" 
+                     class="product-image" 
+                     style="display: flex; align-items: center; justify-content: center; background: #f5f5f5;">
+                    <i class="fas fa-image fa-3x text-secondary"></i>
+                </div>
+                <div class="product-info">
+                    <h3 th:text="${product.name}" style="margin: 0 0 10px 0;">Product Name</h3>
+                    <p th:text="${product.description}" style="color: #666; margin: 0 0 10px 0;">Description</p>
+                    <p style="margin: 0 0 5px 0;">
+                        <span class="fas fa-tag" style="color: #666;"></span>
+                        <span th:text="${product.categoryName}" style="color: #666;">Category</span>
+                    </p>
+                    <p style="margin: 0 0 5px 0;">
+                        <span class="fas fa-dollar-sign" style="color: #666;"></span>
+                        <span th:text="${#numbers.formatCurrency(product.price)}" style="font-weight: bold;">$0.00</span>
+                    </p>
+                    <p style="margin: 0;">
+                        <span class="fas fa-box" style="color: #666;"></span>
+                        <span th:text="${product.currentStock} + ' in stock'" style="color: #666;">0 in stock</span>
+                    </p>
+                </div>
+                <div class="product-actions">
+                    <a th:href="@{/products/{id}/edit(id=${product.productId})}" 
+                       class="btn-edit" style="text-decoration: none;">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <form th:action="@{/products/{id}/delete(id=${product.productId})}" 
+                          method="post" 
+                          style="display: inline;">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit" 
+                                class="btn-delete"
+                                onclick="return confirm('Are you sure you want to delete this product?');">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#productsTable').DataTable({
+            });
+        });
+    </script>
+
+</div>
+</body>
+</html>
+<script>
+        $(document).ready(function() {
+            const searchInput = $("#productSearch");
+            const productCards = $(".product-card");
+
+            searchInput.on("keyup", function() {
+                const searchValue = $(this).val().toLowerCase();
+
+                productCards.each(function() {
+                    const productText = $(this).text().toLowerCase();
+                    $(this).toggle(productText.indexOf(searchValue) > -1);
+                });
+            });
+        });
+    </script>

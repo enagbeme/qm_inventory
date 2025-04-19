@@ -1,0 +1,126 @@
+@startuml QM Inventory System - Order Sequences
+
+actor Staff
+actor Customer
+actor Supplier
+participant "Frontend UI" as UI
+participant "Auth Service" as Auth
+participant "Order Service" as OrderAPI
+participant "Inventory Service" as InvAPI
+participant "Notification Service" as NotifAPI
+database "Database" as DB
+
+== Authentication ==
+Staff -> UI: Login Request
+activate UI
+UI -> Auth: Authenticate(credentials)
+activate Auth
+Auth -> DB: Verify Credentials
+activate DB
+DB --> Auth: User Data
+deactivate DB
+Auth --> UI: Authentication Token
+deactivate Auth
+UI --> Staff: Login Success
+
+== Customer Order Creation ==
+Customer -> UI: Place Order
+activate UI
+UI -> OrderAPI: POST /api/orders
+activate OrderAPI
+
+OrderAPI -> DB: Check Product Availability
+activate DB
+DB --> OrderAPI: Stock Info
+deactivate DB
+
+OrderAPI -> DB: Create Customer Order
+activate DB
+DB --> OrderAPI: Order Created
+deactivate DB
+
+OrderAPI -> DB: Create Order Items
+activate DB
+DB --> OrderAPI: Items Created
+deactivate DB
+
+OrderAPI -> InvAPI: Reserve Products
+activate InvAPI
+InvAPI -> DB: Update Stock Levels
+activate DB
+DB --> InvAPI: Stock Updated
+deactivate DB
+InvAPI --> OrderAPI: Products Reserved
+deactivate InvAPI
+
+OrderAPI -> NotifAPI: Notify Customer
+activate NotifAPI
+NotifAPI --> Customer: Order Confirmation
+deactivate NotifAPI
+
+OrderAPI --> UI: Order Creation Success
+deactivate OrderAPI
+UI --> Customer: Display Order Details
+deactivate UI
+
+== Purchase Order Creation ==
+Staff -> UI: Create Purchase Order
+activate UI
+UI -> OrderAPI: POST /api/purchase-orders
+activate OrderAPI
+
+OrderAPI -> DB: Check Supplier Exists
+activate DB
+DB --> OrderAPI: Supplier Info
+deactivate DB
+
+OrderAPI -> DB: Create Purchase Order
+activate DB
+DB --> OrderAPI: Order Created
+deactivate DB
+
+OrderAPI -> DB: Create Purchase Order Items
+activate DB
+DB --> OrderAPI: Items Created
+deactivate DB
+
+OrderAPI -> NotifAPI: Notify Supplier
+activate NotifAPI
+NotifAPI --> Supplier: Order Notification
+deactivate NotifAPI
+
+OrderAPI --> UI: Order Creation Success
+deactivate OrderAPI
+UI --> Staff: Display Order Details
+deactivate UI
+
+== Order Processing ==
+Supplier -> UI: Process Purchase Order
+activate UI
+UI -> OrderAPI: Update Order Status
+activate OrderAPI
+OrderAPI -> DB: Update Order
+activate DB
+DB --> OrderAPI: Order Updated
+deactivate DB
+
+OrderAPI -> InvAPI: Update Inventory
+activate InvAPI
+InvAPI -> DB: Log Inventory Changes
+activate DB
+DB --> InvAPI: Changes Logged
+deactivate DB
+InvAPI --> OrderAPI: Inventory Updated
+deactivate InvAPI
+
+OrderAPI -> NotifAPI: Notify Staff
+activate NotifAPI
+NotifAPI --> Staff: Order Status Update
+deactivate NotifAPI
+
+OrderAPI --> UI: Processing Complete
+deactivate OrderAPI
+UI --> Supplier: Confirmation
+deactivate UI
+
+@enduml

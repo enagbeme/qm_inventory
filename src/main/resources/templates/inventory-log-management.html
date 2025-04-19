@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Logs | QM Inventory</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+    <link rel="stylesheet" th:href="@{/css/inventory-log.css}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <style>
+        .search-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .form-actions {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+        }
+        .badge-primary {
+            background-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-boxes"></i> QM Inventory</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a th:href="@{/}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li class="active"><a th:href="@{/inventoryLogs}"><i class="fas fa-box"></i> Inventory</a></li>
+                <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
+                <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
+                <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
+                <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
+                <li><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            </ul>
+        </nav>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <img th:src="@{/images/user.png}" alt="User Avatar">
+                <div>
+                    <span class="username" th:text="${user != null ? user.firstName + ' ' + user.lastName : 'Guest'}"></span>
+                    <span class="role" th:text="${user != null && !user.roles.isEmpty() ? user.roles[0].name : 'Guest'}"></span>
+                </div>
+            </div>
+            <a th:href="@{/logout}" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <h1>Inventory Log Management</h1>
+            <div class="header-actions">
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <span th:text="${message}"></span>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Inventory Logs Table -->
+        <div class="table-responsive" th:if="${logs != null && !logs.isEmpty()}">
+            <table id="inventoryLogsTable" class="display">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Change Type</th>
+                    <th>Quantity Change</th>
+                    <th>Reference</th>
+                    <th>Notes</th>
+                    <th>Created By</th>
+                    <th>Created At</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${logs}">
+                    <td th:text="${log.logId}"></td>
+                    <td th:text="${log.productName}"></td>
+                    <td>
+                        <span th:class="${'badge ' + 
+                            (log.changeType == 'PURCHASE' ? 'badge-success' : 
+                            (log.changeType == 'SALE' ? 'badge-primary' : 
+                            (log.changeType == 'ADJUSTMENT' ? 'badge-info' : 
+                            (log.changeType == 'RETURN' ? 'badge-warning' : 'badge-danger'))))}"
+                              th:text="${log.changeType}"></span>
+                    </td>
+                    <td>
+                        <span th:class="${log.quantityChange > 0 ? 'text-success' : 'text-danger'}"
+                              th:text="${log.quantityChange > 0 ? '+' + log.quantityChange : log.quantityChange}"></span>
+                    </td>
+                    <td th:text="${log.referenceType != null ? log.referenceType + ' #' + log.referenceId : '-'}"></td>
+                    <td th:text="${log.notes != null ? log.notes : '-'}"></td>
+                    <td th:text="${log.createdBy}"></td>
+                    <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- No logs message -->
+        <div th:if="${logs == null || logs.isEmpty()}" class="alert alert-info">
+            <p th:if="${productId != null}">No inventory logs found for the selected product and date range.</p>
+            <p th:unless="${productId != null}">Please select a product to view its inventory logs.</p>
+        </div>
+    </main>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#inventoryLogsTable').DataTable({
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | QM Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <style>
+        .report-filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-boxes"></i> QM Inventory</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a th:href="@{/}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a th:href="@{/inventoryLogs}"><i class="fas fa-box"></i> Inventory</a></li>
+                <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
+                <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
+                <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
+                <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
+                <li class="active"><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            </ul>
+        </nav>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <img th:src="@{/images/user.png}" alt="User Avatar">
+                <div>
+                    <span class="username" th:text="${user.firstName + ' ' + user.lastName}"></span>
+                    <span class="role" th:text="${user.roles[0].name}"></span>
+                </div>
+            </div>
+            <a th:href="@{/logout}" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <h1>Sales Reports</h1>
+        </header>
+
+        <!-- Report Filters -->
+        <div class="report-filters">
+            <form th:action="@{/reports/sales}" method="get" class="filter-form">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="datetime-local" id="startDate" name="startDate" 
+                           th:value="${#temporals.format(startDate, 'yyyy-MM-dd''T''HH:mm')}" 
+                           class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="datetime-local" id="endDate" name="endDate" 
+                           th:value="${#temporals.format(endDate, 'yyyy-MM-dd''T''HH:mm')}" 
+                           class="form-control">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+            <div class="export-buttons">
+                <a th:href="@{/reports/sales/pdf(startDate=${startDate},endDate=${endDate})}" class="btn btn-success">
+                    <i class="fas fa-file-pdf"></i> Export Sales Report
+                </a>
+                <a th:href="@{/reports/inventory/pdf}" class="btn btn-success">
+                    <i class="fas fa-file-pdf"></i> Export Inventory Report
+                </a>
+                <a th:href="@{/reports/products/pdf}" class="btn btn-success">
+                    <i class="fas fa-file-pdf"></i> Export Products Report
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <div class="value" th:text="${#numbers.formatCurrency(totalRevenue)}">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Orders</h3>
+                <div class="value" th:text="${orderCount}">0</div>
+            </div>
+        </div>
+
+        <!-- Sales Report Table -->
+        <div class="table-responsive">
+            <table id="salesReportTable" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Quantity Sold</th>
+                        <th>Revenue</th>
+                        <th>Cost</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="sale : ${salesReport}">
+                        <td th:text="${sale.productName}">Product Name</td>
+                        <td th:text="${sale.categoryName}">Category</td>
+                        <td th:text="${sale.totalQuantitySold}">0</td>
+                        <td th:text="${#numbers.formatCurrency(sale.totalRevenue)}">$0.00</td>
+                        <td th:text="${#numbers.formatCurrency(sale.totalCost)}">$0.00</td>
+                        <td th:text="${#numbers.formatCurrency(sale.totalProfit)}">$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#salesReportTable').DataTable({
+        });
+    });
+</script>
+</body>
+</html>

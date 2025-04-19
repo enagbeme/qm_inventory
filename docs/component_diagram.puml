@@ -1,0 +1,65 @@
+@startuml QM Inventory System - Component Diagram
+
+package "Frontend" {
+  [User Interface] as UI
+  [Authentication] as Auth
+  [Product Management] as PM
+  [Order Management] as OM
+  [Inventory Management] as IM
+  [Reports & Analytics] as RA
+  [User Management] as UM
+  [Audit Logs Viewer] as ALV
+}
+
+package "Backend" {
+  [API Gateway] as AG
+  [Security Layer] as SL
+  [User Service] as US
+  [Product Service] as PS
+  [Order Service] as OS
+  [Inventory Service] as IS
+  [Analytics Service] as AS
+  [Reporting Service] as RS
+  [Audit Service] as AuS
+}
+
+package "Data Layer" {
+  database "MySQL Database" as DB
+  [Cache] as Cache
+  [Report Templates] as RT
+  [Audit Logs] as AL
+}
+
+UI --> AG
+Auth --> SL
+PM --> PS
+OM --> OS
+IM --> IS
+RA --> AS
+UM --> US
+ALV --> AuS
+
+AG --> SL
+SL --> US
+SL --> PS
+SL --> OS
+SL --> IS
+SL --> AS
+SL --> RS
+SL --> AuS
+
+US --> DB
+PS --> DB
+OS --> DB
+IS --> DB
+AS --> DB
+RS --> RT
+AuS --> AL
+
+RT --> DB
+AL --> DB
+
+PS ..> Cache
+IS ..> Cache
+
+@enduml

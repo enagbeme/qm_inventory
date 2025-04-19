@@ -1,0 +1,88 @@
+@startuml QM Inventory System - MVC Architecture
+
+skinparam linetype ortho
+skinparam componentStyle uml2
+
+package "Presentation Layer (View)" {
+  folder "Templates" {
+    component "Product Views"
+    component "Order Views"
+    component "Inventory Views"
+    component "User Views"
+    component "Customer Views"
+  }
+}
+
+package "Application Layer (Controller)" {
+  component "ProductController"
+  component "OrderController"
+  component "InventoryController"
+  component "UserController"
+  component "CustomerController"
+}
+
+package "Domain Layer (Model)" {
+  folder "Entities" {
+    component "Product"
+    component "Order"
+    component "User"
+    component "Customer"
+    component "Category"
+    component "Supplier"
+    component "InventoryLog"
+  }
+  
+  folder "Services" {
+    component "ProductService"
+    component "OrderService"
+    component "InventoryService"
+    component "UserService"
+    component "CustomerService"
+  }
+  
+  folder "Repositories" {
+    component "ProductRepository"
+    component "OrderRepository"
+    component "UserRepository"
+    component "CustomerRepository"
+    component "CategoryRepository"
+    component "SupplierRepository"
+    component "InventoryLogRepository"
+  }
+}
+
+database "Database" {
+  component "MySQL Database"
+}
+
+' View to Controller
+"Product Views" --> "ProductController"
+"Order Views" --> "OrderController"
+"Inventory Views" --> "InventoryController"
+"User Views" --> "UserController"
+"Customer Views" --> "CustomerController"
+
+' Controller to Service
+"ProductController" --> "ProductService"
+"OrderController" --> "OrderService"
+"InventoryController" --> "InventoryService"
+"UserController" --> "UserService"
+"CustomerController" --> "CustomerService"
+
+' Service to Repository
+"ProductService" --> "ProductRepository"
+"OrderService" --> "OrderRepository"
+"InventoryService" --> "InventoryLogRepository"
+"UserService" --> "UserRepository"
+"CustomerService" --> "CustomerRepository"
+
+' Repository to Database
+"ProductRepository" --> "MySQL Database"
+"OrderRepository" --> "MySQL Database"
+"UserRepository" --> "MySQL Database"
+"CustomerRepository" --> "MySQL Database"
+"CategoryRepository" --> "MySQL Database"
+"SupplierRepository" --> "MySQL Database"
+"InventoryLogRepository" --> "MySQL Database"
+
+@enduml
