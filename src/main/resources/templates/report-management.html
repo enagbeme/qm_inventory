@@ -87,7 +87,7 @@
                 <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
                 <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
                 <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
-                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i>Sales Orders</a></li>
                 <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
                 <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
                 <li class="active"><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
@@ -99,7 +99,7 @@
                 <img th:src="@{/images/user.png}" alt="User Avatar">
                 <div>
                     <span class="username" th:text="${user.firstName + ' ' + user.lastName}"></span>
-                    <span class="role" th:text="${user.roles[0].name}"></span>
+                    <span class="role" th:text="${!#lists.isEmpty(user.roles)} ? user.roles[0].name : 'N/A'"></span>
                 </div>
             </div>
             <a th:href="@{/logout}" class="btn-logout">
@@ -136,7 +136,7 @@
                 </div>
             </form>
             <div class="export-buttons">
-                <a th:href="@{/reports/sales/pdf(startDate=${startDate},endDate=${endDate})}" class="btn btn-success">
+                <a th:href="@{/reports/sales/pdf(startDate=${#temporals.format(startDate, 'yyyy-MM-dd''T''HH:mm')},endDate=${#temporals.format(endDate, 'yyyy-MM-dd''T''HH:mm')})}" class="btn btn-success">
                     <i class="fas fa-file-pdf"></i> Export Sales Report
                 </a>
                 <a th:href="@{/reports/inventory/pdf}" class="btn btn-success">

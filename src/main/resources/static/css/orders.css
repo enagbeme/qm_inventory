@@ -127,7 +127,34 @@ tr:hover {
     background-color: #f0f0f0;
 }
 
+.btn-icon.delete {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .btn-icon.delete:hover {
+    background-color: #c82333;
+}
+
+.btn-outline-danger {
+    background: none;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.btn-outline-danger:hover {
     background-color: #ffebee;
     color: #dc3545;
 }
@@ -189,11 +216,6 @@ tr:hover {
     background-color: #fff;
 }
 
-.order-items h3 {
-    margin-bottom: 15px;
-    color: #333;
-}
-
 .order-item {
     margin-bottom: 15px;
     padding: 15px;
@@ -222,17 +244,48 @@ tr:hover {
     font-weight: bold;
 }
 
-.btn-icon {
+.order-total {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    text-align: right;
+}
+
+.order-total h3 {
+    margin: 0;
+    color: #333;
+}
+
+#orderTotal {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.btn-remove-item {
+    background-color: #dc3545;
+    color: white;
     padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #dc3545;
-    color: white;
     height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.btn-remove-item:hover {
+    background-color: #c82333;
+}
+
+.btn-add-item {
+    margin-top: 15px;
+    background-color: #28a745;
+}
+
+.btn-add-item:hover {
+    background-color: #218838;
 }
 
 .btn-view {
@@ -247,6 +300,7 @@ tr:hover {
     align-items: center;
     justify-content: center;
 }
+
 .btn-edit {
     padding: 10px;
     border: none;
@@ -258,10 +312,6 @@ tr:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.btn-icon:hover {
-    background-color: #c82333;
 }
 
 #addOrderItem {
@@ -283,7 +333,7 @@ tr:hover {
         width: 100%;
     }
     
-    .btn-icon {
+    .btn-remove-item {
         width: 100%;
         margin-top: 10px;
     }

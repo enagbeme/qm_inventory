@@ -16,6 +16,15 @@
         .dashboard-layout {
             display: flex;
         }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: background 0.3s;
+        }
 
         .main-content {
             padding: 20px;
@@ -50,15 +59,6 @@
             text-align: right;
             margin-top: 20px;
         }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            transition: background 0.3s;
-        }
         .btn-primary {
             background-color: #007bff; /* Blue */
         }
@@ -87,7 +87,7 @@
                 <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
                 <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
                 <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
-                <li class="active"><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li class="active"><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i>Sales Orders</a></li>
                 <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
                 <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
                 <li><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
@@ -151,20 +151,27 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label th:for="'orderItems' + ${itemStat.index} + '.productId'">Product *</label>
-                                <select th:field="*{orderItems[__${itemStat.index}__].productId}" class="form-control" required>
+                                <select th:field="*{orderItems[__${itemStat.index}__].productId}" 
+                                        class="form-control product-select" required
+                                        onchange="calculateSubtotal(this)">
                                     <option value="">Select Product</option>
                                     <option th:each="product : ${products}"
                                             th:value="${product.productId}"
+                                            th:data-price="${product.price}"
                                             th:text="${product.name + ' ($' + product.price + ')'}"></option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label th:for="'orderItems' + ${itemStat.index} + '.quantity'">Quantity *</label>
                                 <input type="number" th:field="*{orderItems[__${itemStat.index}__].quantity}"
-                                       class="form-control" min="1" required>
+                                       class="form-control quantity-input" min="1" required
+                                       onchange="calculateSubtotal(this)">
                             </div>
-                            <button type="button" class="btn btn-remove-item"
-                                    th:onclick="'this.parentElement.parentElement.remove()'">
+                            <div class="form-group">
+                                <label>Subtotal</label>
+                                <div class="subtotal-display">$0.00</div>
+                            </div>
+                            <button type="button" class="btn-icon delete" onclick="removeOrderItem(this)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -172,6 +179,11 @@
                     <button type="button" class="btn btn-add-item" onclick="addOrderItem()">
                         <i class="fas fa-plus"></i> Add Item
                     </button>
+                </div>
+
+                <!-- Order Total -->
+                <div class="order-total">
+                    <h3>Order Total: <span id="orderTotal">$0.00</span></h3>
                 </div>
 
                 <!-- Payment Method -->
@@ -219,20 +231,30 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="orderItems${itemCount}.productId">Product *</label>
-                    <select name="orderItems[${itemCount}].productId" id="orderItems${itemCount}.productId" class="form-control" required>
+                    <select name="orderItems[${itemCount}].productId" 
+                            id="orderItems${itemCount}.productId" 
+                            class="form-control product-select" 
+                            required
+                            onchange="calculateSubtotal(this)">
                         <option value="">Select Product</option>
                         ${products.map(product =>
-            `<option value="${product.productId}">${product.name} ($${product.price})</option>`
+            `<option value="${product.productId}" data-price="${product.price}">${product.name} ($${product.price})</option>`
         ).join('')}
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="orderItems${itemCount}.quantity">Quantity *</label>
                     <input type="number" name="orderItems[${itemCount}].quantity" 
-                           id="orderItems${itemCount}.quantity" class="form-control" 
-                           min="1" required>
+                           id="orderItems${itemCount}.quantity" 
+                           class="form-control quantity-input" 
+                           min="1" required
+                           onchange="calculateSubtotal(this)">
                 </div>
-                <button type="button" class="btn btn-remove-item" onclick="this.parentElement.parentElement.remove()">
+                <div class="form-group">
+                    <label>Subtotal</label>
+                    <div class="subtotal-display">$0.00</div>
+                </div>
+                <button type="button" class="btn-icon delete" onclick="removeOrderItem(this)">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -240,6 +262,50 @@
 
         orderItems.insertBefore(newItem, orderItems.querySelector('.btn-add-item'));
     }
+
+    function calculateSubtotal(element) {
+        const formRow = element.closest('.form-row');
+        const select = formRow.querySelector('.product-select');
+        const quantityInput = formRow.querySelector('.quantity-input');
+        const subtotalDisplay = formRow.querySelector('.subtotal-display');
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const price = parseFloat(selectedOption.dataset.price) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        
+        const subtotal = price * quantity;
+        subtotalDisplay.textContent = `$${subtotal.toFixed(2)}`;
+        
+        updateOrderTotal();
+    }
+
+    function updateOrderTotal() {
+        const subtotals = document.querySelectorAll('.subtotal-display');
+        let total = 0;
+        
+        subtotals.forEach(display => {
+            const amount = parseFloat(display.textContent.replace('$', '')) || 0;
+            total += amount;
+        });
+        
+        document.getElementById('orderTotal').textContent = `$${total.toFixed(2)}`;
+    }
+
+    function removeOrderItem(button) {
+        const orderItem = button.closest('.order-item');
+        orderItem.remove();
+        updateOrderTotal();
+    }
+
+    // Initialize calculations for existing items
+    document.addEventListener('DOMContentLoaded', function() {
+        const productSelects = document.querySelectorAll('.product-select');
+        productSelects.forEach(select => {
+            if (select.value) {
+                calculateSubtotal(select);
+            }
+        });
+    });
 </script>
 </body>
 </html>

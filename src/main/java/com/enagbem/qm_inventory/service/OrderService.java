@@ -177,7 +177,7 @@ public class OrderService {
         }
 
         order.setStatus(newStatus);
-        
+
         // If order is completed, update inventory
         if (newStatus == Order.OrderStatus.DELIVERED) {
             for (OrderItem item : order.getItems()) {

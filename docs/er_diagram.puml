@@ -5,12 +5,13 @@ skinparam linetype ortho
 entity "User" as user {
   *user_id: Long <<PK>>
   --
+  first_name: String
+  last_name: String
   username: String
   password: String
   email: String
   role: String
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
 entity "Product" as product {
@@ -23,8 +24,7 @@ entity "Product" as product {
   quantity: Integer
   category_id: Long <<FK>>
   image_url: String
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
 entity "Category" as category {
@@ -32,8 +32,7 @@ entity "Category" as category {
   --
   name: String
   description: String
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
 entity "Supplier" as supplier {
@@ -44,8 +43,7 @@ entity "Supplier" as supplier {
   email: String
   phone: String
   address: String
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
 entity "PurchaseOrder" as purchase_order {
@@ -56,12 +54,11 @@ entity "PurchaseOrder" as purchase_order {
   status: String
   total_amount: BigDecimal
   created_by: Long <<FK>>
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
-entity "PurchaseOrderItem" as purchase_order_item {
-  *purchase_order_item_id: Long <<PK>>
+entity "PurchaseOrderProduct" as purchase_order_product {
+  *purchase_order_product_id: Long <<PK>>
   --
   purchase_order_id: Long <<FK>>
   product_id: Long <<FK>>
@@ -80,7 +77,6 @@ entity "InventoryLog" as inventory_log {
   reference_id: Long
   notes: String
   created_by: Long <<FK>>
-  created_at: LocalDateTime
 }
 
 entity "Customer" as customer {
@@ -90,8 +86,7 @@ entity "Customer" as customer {
   email: String
   phone: String
   address: String
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
+
 }
 
 entity "Order" as order {
@@ -102,12 +97,10 @@ entity "Order" as order {
   status: String
   total_amount: BigDecimal
   created_by: Long <<FK>>
-  created_at: LocalDateTime
-  updated_at: LocalDateTime
 }
 
-entity "OrderItem" as order_item {
-  *order_item_id: Long <<PK>>
+entity "OrderProduct" as order_product {
+  *order_product_id: Long <<PK>>
   --
   order_id: Long <<FK>>
   product_id: Long <<FK>>
@@ -121,15 +114,15 @@ user ||--o{ inventory_log : creates
 user ||--o{ order : creates
 
 product }|--|| category : belongs to
-product ||--o{ purchase_order_item : contains
-product ||--o{ order_item : contains
+product ||--o{ purchase_order_product : contains
+product ||--o{ order_product : contains
 product ||--o{ inventory_log : tracks
 
 supplier ||--o{ purchase_order : supplies
 
-purchase_order ||--|{ purchase_order_item : contains
+purchase_order ||--|{ purchase_order_product : contains
 
 customer ||--o{ order : places
-order ||--|{ order_item : contains
+order ||--|{ order_product : contains
 
 @enduml

@@ -1,6 +1,5 @@
 package com.enagbem.qm_inventory.service;
 
-
 import com.enagbem.qm_inventory.dto.SalesReportDTO;
 import com.enagbem.qm_inventory.model.Order;
 import com.enagbem.qm_inventory.repository.OrderRepository;
@@ -14,13 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReportService {
 
     private final OrderRepository orderRepository;
-
-    public ReportService(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
-    }
 
     @Transactional(readOnly = true)
     public List<SalesReportDTO> generateSalesReport(LocalDateTime startDate, LocalDateTime endDate) {
@@ -30,12 +26,12 @@ public class ReportService {
         for (Object[] row : results) {
             SalesReportDTO dto = new SalesReportDTO();
             dto.setProductId((Long) row[0]);
-            dto.setProductName((String) row[1]); // Ensure this is a String
-            dto.setCategoryName((String) row[2]); // Ensure this is a String
+            dto.setProductName((String) row[1]);
+            dto.setCategoryName((String) row[2]);
             dto.setTotalQuantitySold(((Number) row[3]).longValue());
-            dto.setTotalRevenue((BigDecimal) row[4]);
-            dto.setTotalCost((BigDecimal) row[5]); // If applicable
-            dto.setTotalProfit((BigDecimal) row[6]); // If applicable
+            dto.setTotalRevenue((BigDecimal) row[5]);
+            dto.setTotalCost((BigDecimal) row[4]); // SUM(unitPrice)
+            dto.setTotalProfit((BigDecimal) row[6]); // Calculated profit in query
             report.add(dto);
         }
 

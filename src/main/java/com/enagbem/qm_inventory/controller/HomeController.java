@@ -46,148 +46,98 @@ public class HomeController {
 
     @GetMapping("/")
     public String homePage(Model model, Principal principal) {
-        String username = principal.getName();
-        userRepository.findByUsername(username).ifPresent(user -> model.addAttribute("user", user));
+        userRepository.findByUsername(principal.getName())
+                .ifPresent(u -> model.addAttribute("user", u));
 
-        DashboardStats dashboardStats = getDashboardStats();
-        model.addAttribute("dashboardStats", dashboardStats);
+        DashboardStats stats = getDashboardStats();
+        model.addAttribute("dashboardStats", stats);
 
-        List<OrderDTO> recentOrders = orderService.getAllOrders().stream().limit(5).toList();
-        model.addAttribute("recentOrders", recentOrders);
-
-        // Add inventory distribution data
-        Map<String, Integer> inventoryDistribution = getInventoryDistribution();
-        model.addAttribute("inventoryDistribution", inventoryDistribution);
-
-        // Add monthly sales data
-        Map<String, Double> monthlySales = getMonthlySalesData();
-        model.addAttribute("monthlySales", monthlySales);
+        model.addAttribute("recentOrders",
+                orderService.getAllOrders().stream().limit(5).toList());
+        model.addAttribute("inventoryDistribution", getInventoryDistribution());
+        model.addAttribute("monthlySales", getMonthlySalesData());
 
         return "home";
     }
 
     private Map<String, Integer> getInventoryDistribution() {
-        Map<String, Integer> distribution = new HashMap<>();
-        
-        // Get all products
-        List<ProductDTO> products = productService.getAllProducts();
-        
-        // Group products by category and count
-        products.forEach(product -> {
-            String category = product.getCategoryName() != null ? 
-                             product.getCategoryName() : 
-                             "Uncategorized";
-            distribution.merge(category, product.getCurrentStock(), Integer::sum);
-        });
-        
-        return distribution;
+        Map<String, Integer> dist = new HashMap<>();
+        for (ProductDTO p : productService.getAllProducts()) {
+            String cat = p.getCategoryName() != null ? p.getCategoryName() : "Uncategorized";
+            dist.merge(cat, p.getCurrentStock(), Integer::sum);
+        }
+        return dist;
     }
 
     private Map<String, Double> getMonthlySalesData() {
-        Map<String, Double> monthlySales = new TreeMap<>(); // TreeMap to maintain chronological order
-        
-        // Get current year
-        Calendar calendar = Calendar.getInstance();
-        int currentYear = calendar.get(Calendar.YEAR);
-        
-        // Initialize all months with 0.0
-        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-        for (String month : months) {
-            monthlySales.put(month, 0.0);
-        }
-        
-        // Calculate sales for each month
-        List<OrderDTO> allOrders = orderService.getAllOrders();
-        for (OrderDTO order : allOrders) {
-            if (order.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED) {
-                Calendar orderDate = Calendar.getInstance();
-                orderDate.setTime(order.getOrderDate());
-                
-                // Only include orders from current year
-                if (orderDate.get(Calendar.YEAR) == currentYear) {
-                    int monthIndex = orderDate.get(Calendar.MONTH);
-                    String monthKey = months[monthIndex];
-                    double currentTotal = monthlySales.get(monthKey);
-                    monthlySales.put(monthKey, currentTotal + order.getTotalAmount().doubleValue());
+        Map<String, Double> sales = new TreeMap<>();
+        String[] months = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+        for (String m : months) sales.put(m, 0.0);
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+        for (OrderDTO o : orderService.getAllOrders()) {
+            if (o.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(o.getOrderDate());
+                if (cal.get(Calendar.YEAR) == year) {
+                    String key = months[cal.get(Calendar.MONTH)];
+                    sales.merge(key, o.getTotalAmount().doubleValue(), Double::sum);
                 }
             }
         }
-        
-        return monthlySales;
+        return sales;
     }
 
     private DashboardStats getDashboardStats() {
-        int totalItems = productService.getAllProducts().size();
+        var products    = productService.getAllProducts();
+        var allOrders   = orderService.getAllOrders();
+        var purchasePos = purchaseOrderService.getAllPurchaseOrders();
+
+        int totalItems     = products.size();
         int totalSuppliers = supplierService.getAllSuppliers().size();
         int totalCustomers = customerService.getAllCustomers().size();
 
-        // Stock Value = price * currentStock
-        double stockValue = productService.getAllProducts().stream()
-                .mapToDouble(product -> product.getPrice().doubleValue() * product.getCurrentStock())
+        double stockValue = products.stream()
+                .mapToDouble(p -> p.getPrice().doubleValue() * p.getCurrentStock())
                 .sum();
 
-        // Get all orders
-        List<OrderDTO> allOrders = orderService.getAllOrders();
-        int totalOrders = allOrders.size();
-        
-        // Count orders by status
+        int totalOrders     = allOrders.size();
         int completedOrders = (int) allOrders.stream()
-                .filter(order -> order.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED)
+                .filter(o -> o.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED)
                 .count();
         int pendingOrders = totalOrders - completedOrders;
 
-        // Revenue = sum of totalAmount of delivered orders
         double totalRevenue = allOrders.stream()
-                .filter(order -> order.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED)
+                .filter(o -> o.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED)
                 .map(OrderDTO::getTotalAmount)
                 .mapToDouble(BigDecimal::doubleValue)
                 .sum();
 
-        // Expenditure = sum of (costPrice * quantitySold) for each product
-        Map<Long, Integer> productSalesMap = new HashMap<>();
-        allOrders.stream()
-                .filter(order -> order.getStatus() == com.enagbem.qm_inventory.model.Order.OrderStatus.DELIVERED)
-                .flatMap(order -> order.getOrderItems().stream())
-                .forEach(item -> productSalesMap.merge(
-                        item.getProductId(),
-                        item.getQuantity(),
-                        Integer::sum
-                ));
-
-        double totalExpenditure = productService.getAllProducts().stream()
-                .filter(product -> productSalesMap.containsKey(product.getProductId()))
-                .mapToDouble(product -> {
-                    int quantitySold = productSalesMap.get(product.getProductId());
-                    return product.getCostPrice().doubleValue() * quantitySold;
-                })
+        // Total Purchases: unit price from purchase items × quantity
+        double totalPurchases = purchasePos.stream()
+                .flatMap(po -> po.getItems().stream())
+                .mapToDouble(item -> item.getUnitCost().doubleValue() * item.getQuantity())
                 .sum();
 
-        // Get purchase order statistics
-        List<PurchaseOrderDTO> allPurchaseOrders = purchaseOrderService.getAllPurchaseOrders();
-        int totalPurchaseOrders = allPurchaseOrders.size();
-        
-        // Count purchase orders by status
-        int completedPurchaseOrders = (int) allPurchaseOrders.stream()
+        int totalPurchaseOrders = purchasePos.size();
+        int completedPOs = (int) purchasePos.stream()
                 .filter(po -> po.getStatus() == com.enagbem.qm_inventory.model.PurchaseOrder.PurchaseOrderStatus.RECEIVED)
                 .count();
-        int pendingPurchaseOrders = totalPurchaseOrders - completedPurchaseOrders;
-
-        double totalProjectedIncome = stockValue - totalExpenditure;
+        int pendingPOs = totalPurchaseOrders - completedPOs;
 
         return new DashboardStats(
                 totalItems,
                 totalSuppliers,
                 totalCustomers,
                 stockValue,
-                totalExpenditure,
                 totalRevenue,
-                totalProjectedIncome,
+                totalPurchases,
                 totalOrders,
                 pendingOrders,
                 completedOrders,
                 totalPurchaseOrders,
-                pendingPurchaseOrders,
-                completedPurchaseOrders
+                pendingPOs,
+                completedPOs
         );
     }
 
@@ -198,8 +148,7 @@ public class HomeController {
         private final int totalCustomers;
         private final double stockValue;
         private final double totalRevenue;
-        private final double totalExpenditure;
-        private final double totalProjectedIncome;
+        private final double totalPurchases;
         private final int totalOrders;
         private final int pendingOrders;
         private final int completedOrders;
@@ -207,39 +156,30 @@ public class HomeController {
         private final int pendingPurchaseOrders;
         private final int completedPurchaseOrders;
 
-        public DashboardStats(int totalItems, int totalSuppliers, int totalCustomers,
-                             double stockValue, double totalRevenue, double totalExpenditure,
-                             double totalProjectedIncome, int totalOrders, int pendingOrders,
-                             int completedOrders, int totalPurchaseOrders, int pendingPurchaseOrders,
-                             int completedPurchaseOrders) {
-            this.totalItems = totalItems;
-            this.totalSuppliers = totalSuppliers;
-            this.totalCustomers = totalCustomers;
-            this.stockValue = stockValue;
-            this.totalRevenue = totalRevenue;
-            this.totalExpenditure = totalExpenditure;
-            this.totalProjectedIncome = totalProjectedIncome;
-            this.totalOrders = totalOrders;
-            this.pendingOrders = pendingOrders;
-            this.completedOrders = completedOrders;
-            this.totalPurchaseOrders = totalPurchaseOrders;
-            this.pendingPurchaseOrders = pendingPurchaseOrders;
+        public DashboardStats(int totalItems,
+                              int totalSuppliers,
+                              int totalCustomers,
+                              double stockValue,
+                              double totalRevenue,
+                              double totalPurchases,
+                              int totalOrders,
+                              int pendingOrders,
+                              int completedOrders,
+                              int totalPurchaseOrders,
+                              int pendingPurchaseOrders,
+                              int completedPurchaseOrders) {
+            this.totalItems              = totalItems;
+            this.totalSuppliers          = totalSuppliers;
+            this.totalCustomers          = totalCustomers;
+            this.stockValue              = stockValue;
+            this.totalRevenue            = totalRevenue;
+            this.totalPurchases          = totalPurchases;
+            this.totalOrders             = totalOrders;
+            this.pendingOrders           = pendingOrders;
+            this.completedOrders         = completedOrders;
+            this.totalPurchaseOrders     = totalPurchaseOrders;
+            this.pendingPurchaseOrders   = pendingPurchaseOrders;
             this.completedPurchaseOrders = completedPurchaseOrders;
         }
-
-        public int getTotalItems() { return totalItems; }
-
-        public int getTotalSuppliers() { return totalSuppliers; }
-
-        public int getTotalCustomers() { return totalCustomers; }
-
-        public double getStockValue() { return stockValue; }
-
-        public double getTotalExpenditure() { return totalExpenditure; }
-
-        public double getTotalRevenue() { return totalRevenue; }
-
-        public double getTotalProjectedIncome() { 
-                return totalProjectedIncome; }
     }
 }

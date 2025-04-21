@@ -391,6 +391,16 @@ nav ul li.active a {
     text-align: center;
     white-space: nowrap;
 }
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
 
 .badge-success {
     background-color: #2ecc71;

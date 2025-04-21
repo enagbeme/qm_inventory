@@ -6,6 +6,7 @@
 
 table(users) {
   primary_key(user_id): BIGINT
+  first_name: VARCHAR(255)
   username: VARCHAR(50)
   password: VARCHAR(255)
   email: VARCHAR(100)
@@ -57,8 +58,8 @@ table(purchase_orders) {
   updated_at: TIMESTAMP
 }
 
-table(purchase_order_items) {
-  primary_key(purchase_order_item_id): BIGINT
+table(purchase_order_products) {
+  primary_key(purchase_order_product_id): BIGINT
   foreign_key(purchase_order_id): BIGINT
   foreign_key(product_id): BIGINT
   quantity: INT
@@ -91,8 +92,8 @@ table(orders) {
   updated_at: TIMESTAMP
 }
 
-table(order_items) {
-  primary_key(order_item_id): BIGINT
+table(order_products) {
+  primary_key(order_product_id): BIGINT
   foreign_key(order_id): BIGINT
   foreign_key(product_id): BIGINT
   quantity: INT
@@ -103,13 +104,13 @@ table(order_items) {
 products }|--|| categories
 purchase_orders }|--|| suppliers
 purchase_orders }|--|| users
-purchase_order_items }|--|| purchase_orders
-purchase_order_items }|--|| products
+purchase_order_products }|--|| purchase_orders
+purchase_order_products }|--|| products
 inventory_logs }|--|| products
 inventory_logs }|--|| users
 orders }|--|| users
-order_items }|--|| orders
-order_items }|--|| products
+order_products }|--|| orders
+order_products }|--|| products
 
 note bottom of users
   Roles: ADMIN, STAFF

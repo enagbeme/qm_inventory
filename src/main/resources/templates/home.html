@@ -28,6 +28,31 @@
             font-weight: bold;
             color: #333;
         }
+
+        .status-badge.pending {
+            background-color: #ffeeba;
+            color: #856404;
+        }
+
+        .status-badge.processing {
+            background-color: #b8daff;
+            color: #004085;
+        }
+
+        .status-badge.shipped {
+            background-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .status-badge.delivered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -45,7 +70,7 @@
                 <li><a th:href="@{/categories}"><i class="fas fa-tags"></i> Categories</a></li>
                 <li><a th:href="@{/suppliers}"><i class="fas fa-truck"></i> Suppliers</a></li>
                 <li><a th:href="@{/customers}"><i class="fas fa-users"></i> Customers</a></li>
-                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                <li><a th:href="@{/orders}"><i class="fas fa-shopping-cart"></i>Sales Orders</a></li>
                 <li><a th:href="@{/purchase-orders}"><i class="fas fa-truck-loading"></i> Purchase Orders</a></li>
                 <li><a th:href="@{/products}"><i class="fas fa-tags"></i> Products</a></li>
                 <li><a th:href="@{/reports}"><i class="fas fa-chart-bar"></i> Reports</a></li>
@@ -131,20 +156,13 @@
             </div>
 
             <div class="card card-success">
-                <div class="card-icon"><i class="fas fa-piggy-bank"></i></div>
+                <div class="card-icon"><i class="fas fa-wallet"></i></div>
                 <div class="card-content">
-                    <h3>Projected Income</h3>
-                    <p>$<span th:text="${#numbers.formatDecimal(dashboardStats.totalProjectedIncome, 1, 2)}">0.00</span></p>
+                    <h3>Total Purchases</h3>
+                    <p>$<span th:text="${#numbers.formatDecimal(dashboardStats.totalPurchases, 1, 2)}">0.00</span></p>
                 </div>
             </div>
 
-            <div class="card card-danger">
-                <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
-                <div class="card-content">
-                    <h3>Total Expenditure</h3>
-                    <p>$<span th:text="${#numbers.formatDecimal(dashboardStats.totalExpenditure, 1, 2)}">0.00</span></p>
-                </div>
-            </div>
 
             <!-- Order Statistics -->
             <div class="card card-purple">
@@ -152,7 +170,7 @@
                     <i class="fas fa-cart-shopping"></i>
                 </div>
                 <div class="card-content">
-                    <h3>Total Orders</h3>
+                    <h3>Total Sales Orders</h3>
                     <p><span th:text="${dashboardStats.totalOrders}">0</span></p>
                     <div class="card-details">
                         <small>Pending: <span th:text="${dashboardStats.pendingOrders}">0</span></small>
@@ -195,7 +213,7 @@
 
             <div class="chart-container">
                 <div class="chart-card">
-                    <h3>Recent Orders</h3>
+                    <h3>Recent Sales Orders</h3>
                     <div class="recent-orders">
                         <table>
                             <thead>
@@ -211,14 +229,18 @@
                             <tr th:each="order : ${recentOrders}">
                                 <td th:text="${order.orderId}"></td>
                                 <td th:text="${order.customer.name}"></td>
-                                <td th:text="${order.orderDate}"></td>
+                                <td th:text="${#dates.format(order.orderDate, 'yyyy-MM-dd')}"></td>
                                 <td th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
-                                <td><span th:class="${order.status == 'COMPLETED'} ? 'badge-success' : 'badge-warning'"
-                                          th:text="${order.status}"></span></td>
+                                <td>
+                                    <span th:class="'status-badge ' + ${#strings.toLowerCase(order.status)}"
+                                          th:text="${order.status}"></span>
+
+                                </td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </div>
         </section>
